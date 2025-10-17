@@ -202,7 +202,7 @@ def main():
                 filter_function=lambda doc: doc.metadata.get("processing_route") == "text_extraction"
             ),
             SavePDFsToDisk(OUTPUT_DIR + "/text_extraction_pdfs"),
-            DoclingExtractor(timeout=60),
+            DoclingExtractor(timeout=1200),
             JsonlWriter(OUTPUT_DIR + "/text_extraction"),
         ],
         tasks=1,

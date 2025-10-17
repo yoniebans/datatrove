@@ -59,14 +59,16 @@ cd datatrove
 git checkout learning/phase3-routing-pipeline
 ```
 
-### 2.2 Clone Docling-sync (for optimized models)
+### 2.2 Clone Docling-sync
 
 ```bash
 cd ~
 git clone https://github.com/yoniebans/Docling-sync.git
+cd Docling-sync
+git checkout bug/fix_compilation_issues
 ```
 
-**Important:** This provides the OpenVINO quantized layout model (`v2-quant.xml`) which is significantly faster than the default model.
+**Important:** This provides both optimized Docling code and the OpenVINO quantized layout model (`v2-quant.xml`) which is significantly faster than the official Docling release.
 
 ---
 
@@ -99,11 +101,22 @@ pip install -e ".[dev,all]"
 
 This installs all dependencies including:
 - Core datatrove packages
-- Docling (official release)
+- Docling (official release - will be replaced in next step)
 - LMDeploy (for RolmOCR)
 - All processing tools
 
-### 4.2 Install Additional Dependencies
+### 4.2 Install Docling-sync (Replaces Official Docling)
+
+```bash
+cd ~/Docling-sync
+pip install -e ./docling-core
+pip install -e ./docling
+pip install -e ./docling-ibm-models
+```
+
+**Important:** This replaces the official Docling with optimized versions. Docling-sync is a monorepo containing three packages that must all be installed.
+
+### 4.3 Install Additional Dependencies
 
 ```bash
 pip install openvino zstandard warcio s3fs pymupdf orjson xgboost
@@ -118,7 +131,7 @@ pip install openvino zstandard warcio s3fs pymupdf orjson xgboost
 - `orjson`: Fast JSON parsing
 - `xgboost`: ML model for PDF routing
 
-### 4.3 Install LMDeploy for RolmOCR
+### 4.4 Install LMDeploy for RolmOCR
 
 ```bash
 pip install lmdeploy[all]
@@ -139,9 +152,10 @@ export LAYOUT_VINO_PATH="../Docling-sync/models/v2-quant.xml"
 ```
 
 **Why this matters:**
-- Default Docling uses a slower layout detection model
-- The quantized OpenVINO model from Docling-sync is ~4x faster
+- Docling-sync includes an optimized quantized OpenVINO layout model
+- This model is ~4x faster than the default
 - Must be set before running any pipeline that uses DoclingExtractor
+- Works with the Docling-sync packages installed in step 4.2
 
 ### 5.2 Verify Setup
 
@@ -303,7 +317,10 @@ python examples/finepdfs.py
 │   │   └── logs/                       # Test logs
 │   └── output/                         # Production outputs
 │
-└── Docling-sync/                       # Optimized Docling models
+└── Docling-sync/                       # Optimized Docling monorepo
+    ├── docling-core/                   # Core package (installed with pip -e)
+    ├── docling/                        # Main package (installed with pip -e)
+    ├── docling-ibm-models/             # Model package (installed with pip -e)
     └── models/
         └── v2-quant.xml                # Fast OpenVINO layout model
 ```
@@ -364,11 +381,24 @@ sudo reboot
 
 **Solution:**
 ```bash
+# Ensure correct Docling-sync branch
+cd ~/Docling-sync
+git fetch origin
+git checkout bug/fix_compilation_issues
+
+# Ensure Docling-sync packages are installed
+pip list | grep docling
+
 # Ensure environment variable is set
 export LAYOUT_VINO_PATH="../Docling-sync/models/v2-quant.xml"
 
 # Verify path exists
 ls -la ../Docling-sync/models/v2-quant.xml
+
+# If packages missing or wrong version, reinstall
+pip install -e ./docling-core
+pip install -e ./docling
+pip install -e ./docling-ibm-models
 ```
 
 ### Issue: S3 access denied
@@ -407,9 +437,9 @@ cat spec/phase3/logs/*/ocr_extraction/stats/*.json | jq '.successful_documents'
 ## 12. Performance Notes
 
 ### Docling (CPU)
-- With OpenVINO quantized model: ~1-2 seconds per page
+- With Docling-sync + OpenVINO quantized model: ~1-2 seconds per page
 - Without optimization: ~5-10 seconds per page
-- **Always set `LAYOUT_VINO_PATH`**
+- **Always install Docling-sync packages (step 4.2) and set `LAYOUT_VINO_PATH`**
 
 ### RolmOCR (GPU)
 - With A10 GPU: ~5-10 seconds per page
@@ -487,6 +517,6 @@ Once setup is complete:
 
 For issues or questions:
 - DataTrove: https://github.com/huggingface/datatrove
-- Docling: https://github.com/DS4SD/docling
-- Docling-sync: https://github.com/yoniebans/Docling-sync
+- Docling (official): https://github.com/DS4SD/docling
+- Docling-sync (fork used in this setup): https://github.com/yoniebans/Docling-sync
 - RolmOCR: https://huggingface.co/Reducto/RolmOCR
