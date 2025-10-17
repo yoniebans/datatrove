@@ -233,7 +233,7 @@ def main():
                     max_concurrent_tasks=1,
                     model_kwargs={
                         "chat_template": "internlm",
-                        "vision_max_batch_size": 128
+                        "vision_max_batch_size": 32
                     }
                 ),
                 post_process_steps=[
