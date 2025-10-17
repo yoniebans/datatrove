@@ -432,6 +432,25 @@ Check stats to verify:
 cat spec/phase3/logs/*/ocr_extraction/stats/*.json | jq '.successful_documents'
 ```
 
+### RunPod Configuration Issues
+
+**If using RunPod PyTorch template, apply these fixes:**
+
+```bash
+# 1. Disable fast HF downloads (causes missing dependency errors)
+export HF_HUB_ENABLE_HF_TRANSFER=0
+echo 'export HF_HUB_ENABLE_HF_TRANSFER=0' >> ~/.bashrc
+
+# 2. Install missing RolmOCR dependency
+pip install qwen_vl_utils
+
+# 3. Enable PyTorch memory optimization
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+echo 'export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True' >> ~/.bashrc
+```
+
+**Memory issues on A40 (46GB):** RolmOCR may hit OOM during vision encoding. If this occurs, reduce `vision_max_batch_size` in your pipeline config from 32 to 8-16.
+
 ---
 
 ## 12. Performance Notes
