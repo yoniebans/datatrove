@@ -176,6 +176,9 @@ spec/phase2/data/
 spec/phase3/output/
 spec/phase3/logs/
 spec/phase3/data/
+spec/phase4/output/
+spec/phase4/logs/
+spec/phase4/data/
 
 # Generated plots and analysis
 *.png
