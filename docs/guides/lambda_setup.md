@@ -56,7 +56,7 @@ nvidia-smi
 cd ~
 git clone https://github.com/yoniebans/datatrove.git
 cd datatrove
-git checkout learning/phase3-routing-pipeline
+git checkout feat/varied_local_pdf_testing
 ```
 
 ### 2.2 Clone Docling-sync
