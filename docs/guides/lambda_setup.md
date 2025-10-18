@@ -145,10 +145,11 @@ This provides GPU-accelerated inference for the RolmOCR vision model.
 
 ### 5.1 Set Environment Variable
 
-Add this to your `~/.bashrc` (or set before each run):
+Add the Docling optimization to your `~/.bashrc`:
 
 ```bash
-export LAYOUT_VINO_PATH="../Docling-sync/models/v2-quant.xml"
+echo 'export LAYOUT_VINO_PATH="../Docling-sync/models/v2-quant.xml"' >> ~/.bashrc
+source ~/.bashrc
 ```
 
 **Why this matters:**
@@ -161,7 +162,6 @@ export LAYOUT_VINO_PATH="../Docling-sync/models/v2-quant.xml"
 
 ```bash
 conda activate datatrove-docling
-export LAYOUT_VINO_PATH="../Docling-sync/models/v2-quant.xml"
 cd ~/datatrove
 
 python -c "
@@ -227,8 +227,6 @@ GPU name: NVIDIA A10 (or similar)
 ```bash
 cd ~/datatrove
 conda activate datatrove-docling
-export LAYOUT_VINO_PATH="../Docling-sync/models/v2-quant.xml"
-
 python spec/phase3/examples/08d_docling_test.py
 ```
 
@@ -274,9 +272,6 @@ ssh ubuntu@<your-lambda-ip>
 
 # Activate environment
 conda activate datatrove-docling
-
-# Set Docling optimization
-export LAYOUT_VINO_PATH="../Docling-sync/models/v2-quant.xml"
 
 # Navigate to project
 cd ~/datatrove
@@ -477,7 +472,6 @@ echo 'export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True' >> ~/.bashrc
 ### Essential Environment Setup (run every session)
 ```bash
 conda activate datatrove-docling
-export LAYOUT_VINO_PATH="../Docling-sync/models/v2-quant.xml"
 cd ~/datatrove
 ```
 
