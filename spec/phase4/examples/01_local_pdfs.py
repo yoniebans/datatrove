@@ -46,7 +46,7 @@ LOGS_DIR = "spec/phase4/logs/01_local_pdfs"
 # NOTE: Current implementation processes only first N pages per PDF in a single request
 # For full multi-page PDF processing, we need to implement chunking/pagination
 # TODO: Add page chunking to process all pages of large PDFs
-MAX_PAGES_PER_OCR_REQUEST = 2  # Conservative limit for 80GB GPU
+MAX_PAGES_PER_OCR_REQUEST = 5  # Testing throughput on H100 80GB
 
 
 # ============================================================================
