@@ -42,6 +42,12 @@ MODEL_PATH = "spec/phase3/data/pdf_classifier_real_data.xgb"
 OUTPUT_DIR = "spec/phase4/output/01_local_pdfs"
 LOGS_DIR = "spec/phase4/logs/01_local_pdfs"
 
+# OCR Configuration
+# NOTE: Current implementation processes only first N pages per PDF in a single request
+# For full multi-page PDF processing, we need to implement chunking/pagination
+# TODO: Add page chunking to process all pages of large PDFs
+MAX_PAGES_PER_OCR_REQUEST = 2  # Conservative limit for 80GB GPU
+
 
 # ============================================================================
 # Helper Classes for Saving PDFs/PNGs
@@ -70,10 +76,11 @@ class SavePDFsToDisk(PipelineStep):
 class SaveOCRPagesAsPNG(PipelineStep):
     """Save rendered PDF pages as PNG images (as sent to RolmOCR)."""
 
-    def __init__(self, output_dir: str):
+    def __init__(self, output_dir: str, max_pages: int = None):
         super().__init__()
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.max_pages = max_pages
 
     def run(self, data: Iterable[Document], rank: int = 0, world_size: int = 1):
         for document in data:
@@ -82,7 +89,10 @@ class SaveOCRPagesAsPNG(PipelineStep):
                 pdf_doc = fitz.open(stream=pdf_bytes, filetype="pdf")
 
                 # Render pages (match RolmOCR processing)
-                max_pages = min(1, len(pdf_doc))  # Same as rolmocr_query_builder
+                if self.max_pages is not None:
+                    max_pages = min(self.max_pages, len(pdf_doc))
+                else:
+                    max_pages = len(pdf_doc)
                 for page_num in range(max_pages):
                     page = pdf_doc.load_page(page_num)
 
@@ -233,13 +243,14 @@ def main():
                     max_concurrent_tasks=1,
                     model_kwargs={
                         "chat_template": "internlm",
-                        "vision_max_batch_size": 8
+                        "vision_max_batch_size": 32,
+                        "max_pages_per_request": MAX_PAGES_PER_OCR_REQUEST
                     }
                 ),
                 post_process_steps=[
                     ExtractInferenceText(),
                     SavePDFsToDisk(OUTPUT_DIR + "/ocr_extraction_pdfs"),
-                    SaveOCRPagesAsPNG(OUTPUT_DIR + "/ocr_extraction_pages_png"),
+                    SaveOCRPagesAsPNG(OUTPUT_DIR + "/ocr_extraction_pages_png", max_pages=MAX_PAGES_PER_OCR_REQUEST),
                     PersistentContextJsonlWriter(OUTPUT_DIR + "/ocr_extraction")
                 ]
             ),

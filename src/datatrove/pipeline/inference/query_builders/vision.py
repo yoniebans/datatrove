@@ -23,6 +23,10 @@ def rolmocr_query_builder(runner: InferenceRunner, doc: Document) -> dict:
 
     Raises:
         ValueError: If document has no media bytes
+
+    Notes:
+        - Use `max_pages_per_request` in model_kwargs to limit pages processed per request
+        - Default processes all pages (may cause OOM with large PDFs)
     """
     from datatrove.pipeline.inference.utils.page_rendering import render_page_to_base64png_pymupdf
 
@@ -33,8 +37,15 @@ def rolmocr_query_builder(runner: InferenceRunner, doc: Document) -> dict:
     pdf_bytes = doc.media[0].media_bytes
     pdf_doc = fitz.open(stream=pdf_bytes, filetype="pdf")
 
-    # Process all pages (or limit for memory/cost)
-    max_pages = len(pdf_doc)  # Process all pages in production
+    # Check if max_pages_per_request is configured (for memory management)
+    max_pages_per_request = runner.config.model_kwargs.get('max_pages_per_request', None)
+
+    # Process all pages or limit based on config
+    if max_pages_per_request is not None:
+        max_pages = min(max_pages_per_request, len(pdf_doc))
+    else:
+        max_pages = len(pdf_doc)  # Process all pages by default
+
     page_images = []
 
     for page_num in range(max_pages):
