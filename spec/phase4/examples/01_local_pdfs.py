@@ -43,10 +43,9 @@ OUTPUT_DIR = "spec/phase4/output/01_local_pdfs"
 LOGS_DIR = "spec/phase4/logs/01_local_pdfs"
 
 # OCR Configuration
-# NOTE: Current implementation processes only first N pages per PDF in a single request
-# For full multi-page PDF processing, we need to implement chunking/pagination
-# TODO: Add page chunking to process all pages of large PDFs
-MAX_PAGES_PER_OCR_REQUEST = 3  # Conservative: leaves ~4K tokens for output in 8K context
+# Pages are chunked automatically - each chunk stays within 8K context
+# Results from all chunks are concatenated by ExtractInferenceText
+MAX_PAGES_PER_OCR_REQUEST = 3  # Pages per chunk: leaves ~4K tokens for output in 8K context
 
 
 # ============================================================================
@@ -250,7 +249,7 @@ def main():
                 post_process_steps=[
                     ExtractInferenceText(),
                     SavePDFsToDisk(OUTPUT_DIR + "/ocr_extraction_pdfs"),
-                    SaveOCRPagesAsPNG(OUTPUT_DIR + "/ocr_extraction_pages_png", max_pages=MAX_PAGES_PER_OCR_REQUEST),
+                    SaveOCRPagesAsPNG(OUTPUT_DIR + "/ocr_extraction_pages_png"),  # Save all processed pages
                     PersistentContextJsonlWriter(OUTPUT_DIR + "/ocr_extraction")
                 ]
             ),
