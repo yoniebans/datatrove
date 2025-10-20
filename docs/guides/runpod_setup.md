@@ -63,13 +63,9 @@ git checkout feat/varied_local_pdf_testing
 cd ../Docling-sync
 git checkout bug/fix_compilation_issues
 
-# Set up HuggingFace cache on volume
-echo 'export HF_HOME=/workspace/models' >> ~/.bashrc
-echo 'export TRANSFORMERS_CACHE=/workspace/models' >> ~/.bashrc
-source ~/.bashrc
-
 # Create data directories
-mkdir -p /workspace/repos/datatrove/spec/phase4/data
+cd /workspace/repos/datatrove
+mkdir -p spec/phase4/data
 ```
 
 ---
@@ -83,6 +79,15 @@ Create `/workspace/init.sh` on your volume (one-time setup):
 set -e
 
 echo "🚀 Initializing DataTrove Environment..."
+
+# ============================================================================
+# SSH Key Setup
+# ============================================================================
+if [ -n "$SSH_PUBLIC_KEY" ]; then
+    echo "🔑 Adding SSH public key..."
+    echo "$SSH_PUBLIC_KEY" >> ~/.ssh/authorized_keys
+    echo "✅ SSH key added"
+fi
 
 # ============================================================================
 # Environment Variables
@@ -116,12 +121,18 @@ if [ ! -d "$HOME/miniconda3" ]; then
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh
     bash /tmp/miniconda.sh -b -p $HOME/miniconda3
     rm /tmp/miniconda.sh
-    echo 'export PATH="$HOME/miniconda3/bin:$PATH"' >> ~/.bashrc
-    source ~/.bashrc
-    conda init bash
 fi
 
-source $HOME/miniconda3/bin/activate
+# Initialize conda for this shell and all future SSH sessions
+export PATH="$HOME/miniconda3/bin:$PATH"
+eval "$($HOME/miniconda3/bin/conda shell.bash hook)"
+$HOME/miniconda3/bin/conda init bash
+
+# Accept Conda TOS
+echo "📜 Accepting Conda Terms of Service..."
+conda config --set channel_priority flexible
+yes | conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main || true
+yes | conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r || true
 
 # ============================================================================
 # Conda Environment
@@ -201,7 +212,10 @@ HF_HOME=/workspace/models
 TRANSFORMERS_CACHE=/workspace/models
 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 HF_HUB_ENABLE_HF_TRANSFER=0
+SSH_PUBLIC_KEY=ssh-ed25519 AAAA...your-public-key-here
 ```
+
+**Note:** Get your public key with: `cat ~/.ssh/id_ed25519.pub`
 
 **Volume Mount:**
 - Select: `datatrove-workspace`
