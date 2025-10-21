@@ -80,14 +80,8 @@ set -e
 
 echo "🚀 Initializing DataTrove Environment..."
 
-# ============================================================================
-# SSH Key Setup
-# ============================================================================
-if [ -n "$SSH_PUBLIC_KEY" ]; then
-    echo "🔑 Adding SSH public key..."
-    echo "$SSH_PUBLIC_KEY" >> ~/.ssh/authorized_keys
-    echo "✅ SSH key added"
-fi
+# Note: SSH is handled by RunPod's /start.sh script (runs before this)
+# Your SSH keys from RunPod account settings are automatically configured
 
 # ============================================================================
 # Environment Variables
@@ -155,9 +149,9 @@ pip install -e ./docling
 pip install -e ./docling-ibm-models
 
 echo "📚 Installing additional dependencies..."
-pip install openvino zstandard warcio s3fs pymupdf orjson xgboost
-pip install lmdeploy[all]
-pip install qwen_vl_utils
+pip install openvino==2025.3.0 zstandard==0.25.0 warcio==1.7.5 s3fs==2025.9.0 orjson==3.11.3 xgboost==3.1.0
+pip install lmdeploy[all]==0.10.1
+pip install qwen-vl-utils==0.0.14
 
 # ============================================================================
 # Verification
@@ -203,8 +197,10 @@ runpod/pytorch:2.1.0-py3.11-cuda12.1.0-devel-ubuntu22.04
 
 **Docker Command:**
 ```bash
-bash -c "source ~/.bashrc && /workspace/init.sh && sleep infinity"
+bash -c "/start.sh > /tmp/start.log 2>&1 & tail -f /tmp/start.log | grep -q 'Pod is ready to use' && source ~/.bashrc && /workspace/init.sh && wait"
 ```
+
+**Note:** This runs RunPod's `/start.sh` first (which sets up SSH using your account keys), waits for it to complete, then runs your custom init.sh.
 
 **Environment Variables:**
 ```
@@ -212,10 +208,9 @@ HF_HOME=/workspace/models
 TRANSFORMERS_CACHE=/workspace/models
 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 HF_HUB_ENABLE_HF_TRANSFER=0
-SSH_PUBLIC_KEY=ssh-ed25519 AAAA...your-public-key-here
 ```
 
-**Note:** Get your public key with: `cat ~/.ssh/id_ed25519.pub`
+**Note:** SSH keys are automatically configured from your RunPod account settings (Settings → SSH Public Keys)
 
 **Volume Mount:**
 - Select: `datatrove-workspace`
