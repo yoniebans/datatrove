@@ -1,27 +1,39 @@
 # Phase 4 Utilities
 
-Helper scripts for pulling and reviewing Phase 4 pipeline results.
+Helper scripts for managing files between local and remote servers, and reviewing Phase 4 pipeline results.
 
-## Usage
+## Scripts
 
-### 1. Pull Results from Remote Server
+### push_inputs.sh
+Upload PDFs to remote server for processing.
 
 ```bash
 # Set environment variables
-export REMOTE_HOST="root@your-host"
-export REMOTE_PORT="22"                    # Optional, defaults to 22
-export REMOTE_SSH_KEY="~/.ssh/id_rsa"      # Optional, defaults to ~/.ssh/id_rsa
+export REMOTE_HOST="root@<remote-ip>"
+export REMOTE_PORT="<port>"
 
-# Pull results and extract text
-./spec/phase4/examples/utils/pull_results.sh
+# Upload PDFs
+./spec/phase4/examples/utils/push_inputs.sh ~/.ssh/id_ed25519 "/path/to/pdfs/*.pdf" "/remote/path/to/data/"
 ```
 
-### 2. Extract Text (Manual)
-
-If you already have the results locally:
+### pull_outputs.sh
+Download results from remote server and extract text for review.
 
 ```bash
-python spec/phase4/examples/utils/extract_text_for_review.py
+# Set environment variables
+export REMOTE_HOST="root@<remote-ip>"
+export REMOTE_PORT="<port>"
+
+# Pull results and extract text
+./spec/phase4/examples/utils/pull_outputs.sh ~/.ssh/id_ed25519 "/remote/path/to/output" "/local/path/to/results"
+```
+
+### extract_text_for_review.py
+Extract text from JSONL files for manual review.
+
+```bash
+# Extract text from downloaded results
+python spec/phase4/examples/utils/extract_text_for_review.py /local/path/to/results
 ```
 
 ## Output

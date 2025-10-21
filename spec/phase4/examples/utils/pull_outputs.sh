@@ -9,17 +9,17 @@
 #   - local_path: resolved relative to where you run the script from (use absolute paths to avoid confusion)
 #
 # Example (using absolute paths):
-#   export REMOTE_HOST="root@213.181.122.235"
-#   export REMOTE_PORT="11531"
-#   ./pull_outputs.sh ~/.ssh/id_ed25519 "/workspace/repos/datatrove/spec/phase4/output/01_local_pdfs" "/Users/you/datatrove/spec/phase4/data/results"
+#   export REMOTE_HOST="root@<remote-ip>"
+#   export REMOTE_PORT="<port>"
+#   ./pull_outputs.sh ~/.ssh/id_ed25519 "/remote/path/to/output" "/local/path/to/results"
 #
 # Example (using relative paths - assumes running from datatrove repo root):
-#   export REMOTE_HOST="root@213.181.122.235"
-#   export REMOTE_PORT="11531"
-#   ./spec/phase4/examples/utils/pull_outputs.sh ~/.ssh/id_ed25519 "/workspace/repos/datatrove/spec/phase4/output/01_local_pdfs" "spec/phase4/data/results"
+#   export REMOTE_HOST="root@<remote-ip>"
+#   export REMOTE_PORT="<port>"
+#   ./spec/phase4/examples/utils/pull_outputs.sh ~/.ssh/id_ed25519 "/remote/path/to/output" "spec/phase4/data/results"
 #
 # Environment variables (required):
-#   REMOTE_HOST - SSH host (e.g., root@213.181.122.235)
+#   REMOTE_HOST - SSH host (e.g., root@<remote-ip>)
 #   REMOTE_PORT - SSH port
 
 set -e
@@ -32,9 +32,9 @@ if [ "$#" -lt 3 ]; then
     echo "  ./pull_outputs.sh <ssh_key_path> <remote_path> <local_path>"
     echo ""
     echo "Example (using absolute paths):"
-    echo "  export REMOTE_HOST='root@213.181.122.235'"
-    echo "  export REMOTE_PORT='11531'"
-    echo "  ./pull_outputs.sh ~/.ssh/id_ed25519 \"/workspace/repos/datatrove/spec/phase4/output/01_local_pdfs\" \"/Users/you/datatrove/spec/phase4/data/results\""
+    echo "  export REMOTE_HOST='root@<remote-ip>'"
+    echo "  export REMOTE_PORT='<port>'"
+    echo "  ./pull_outputs.sh ~/.ssh/id_ed25519 \"/remote/path/to/output\" \"/local/path/to/results\""
     exit 1
 fi
 
