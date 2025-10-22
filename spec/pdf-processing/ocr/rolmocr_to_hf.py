@@ -83,7 +83,8 @@ def main():
                         dataset=hf_dataset_repo,
                         private=True,
                         local_working_dir=OUTPUT_DIR + "/hf_upload_temp",
-                        cleanup=True
+                        expand_metadata=False,
+                        cleanup=False
                     )
                 ]
             )
