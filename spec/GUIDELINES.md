@@ -2,10 +2,37 @@
 
 This document defines standards for all spec files, implementation files, and documentation in the DataTrove repository.
 
+## Directory Structure
+
+Organize work by use-case and feature domain:
+
+```
+spec/
+├── getting-started/          # Basic tutorials and introductory examples
+├── pdf-processing/           # PDF-specific processing
+│   ├── classification/       # PDF classification examples
+│   ├── extraction/           # Text/OCR extraction
+│   ├── routing/              # Dual-route processing
+│   └── utils/                # PDF-specific utilities
+├── distributed/              # Distributed processing examples
+│   ├── slurm/
+│   └── ray/
+├── deployment/               # Platform-specific deployment guides
+│   ├── runpod/
+│   └── lambda/
+└── utils/                    # Cross-cutting utilities
+```
+
+**Rationale:**
+- Logical grouping by problem domain
+- Easier to find related examples
+- Scales as new features are added
+- Clear separation of concerns
+
 ## Spec File Template
 
 ```markdown
-# Example XX: [Title]
+# [Title]
 
 ## Objective
 [1-2 sentence description of what this example teaches]
@@ -15,11 +42,11 @@ This document defines standards for all spec files, implementation files, and do
 - Component2: Purpose
 
 ## Implementation
-**File:** `spec/phaseN/examples/XX_example_name.py`
+**File:** `spec/[domain]/[subdomain]/example_name.py`
 
 ## Data Requirements
 - Input: [description or "None - uses HuggingFace datasets"]
-- Output: `spec/phaseN/output/XX_example_name/`
+- Output: `spec/[domain]/[subdomain]/output/example_name/`
 
 ## Expected Results
 [Brief description of what success looks like - metrics, file counts, etc]
@@ -38,7 +65,7 @@ This document defines standards for all spec files, implementation files, and do
 ```python
 #!/usr/bin/env python3
 """
-Example XX: [Title]
+[Title]
 
 [1-2 sentence description]
 
@@ -47,7 +74,7 @@ Components:
 - Component2: Purpose
 
 Usage:
-    python spec/phaseN/examples/XX_example_name.py
+    python spec/[domain]/[subdomain]/example_name.py
 """
 
 # Standard library imports (one per line)
@@ -63,13 +90,13 @@ from datatrove.pipeline.filters import LambdaFilter, SamplerFilter
 from datatrove.utils.logging import logger
 
 # Configuration - paths only
-OUTPUT_DIR = "spec/phaseN/output/XX_example_name"
-LOGS_DIR = "spec/phaseN/logs/XX_example_name"
+OUTPUT_DIR = "spec/[domain]/[subdomain]/output/example_name"
+LOGS_DIR = "spec/[domain]/[subdomain]/logs/example_name"
 
 
 def main():
     """Main pipeline execution."""
-    logger.info("Starting Example XX: [Title]")
+    logger.info("Starting [Title]")
 
     pipeline = [
         # Pipeline steps with inline comments
@@ -174,7 +201,7 @@ JsonlWriter(OUTPUT_DIR / "classified")   # Don't use Path division
 **All paths relative to repo root:**
 ```python
 # Good
-OUTPUT_DIR = "spec/phase1/output/01_example"
+OUTPUT_DIR = "spec/pdf-processing/extraction/output/example_name"
 
 # Bad
 OUTPUT_DIR = "/tmp/output/"  # Hardcoded absolute
@@ -244,7 +271,7 @@ Create the pipeline:
 ```python
 def main():
     """Main pipeline execution."""
-    logger.info("Starting Example XX: [Title]")
+    logger.info("Starting pipeline")
 
     # Implementation here
 
@@ -258,8 +285,8 @@ if __name__ == "__main__":
 **Configuration constants:**
 ```python
 # Good - only paths
-OUTPUT_DIR = "spec/phase1/output/01_example"
-LOGS_DIR = "spec/phase1/logs/01_example"
+OUTPUT_DIR = "spec/pdf-processing/extraction/output/example_name"
+LOGS_DIR = "spec/pdf-processing/extraction/logs/example_name"
 
 # Bad - other values belong inline
 NUM_WORKERS = 4        # Keep inline for readability
@@ -280,7 +307,7 @@ executor.run()
 ## Checklist for New Examples
 
 - [ ] Has `#!/usr/bin/env python3` shebang
-- [ ] Docstring follows "Example XX:" template
+- [ ] Docstring follows template format
 - [ ] Imports organized (stdlib → third-party → local)
 - [ ] Uses `from datatrove.utils.logging import logger`
 - [ ] No `print()` statements
@@ -289,5 +316,6 @@ executor.run()
 - [ ] Uses string concatenation for paths (not f-strings)
 - [ ] Has `main()` function
 - [ ] Has `if __name__ == "__main__": main()`
-- [ ] Runs from repo root: `python spec/phaseN/examples/XX_name.py`
+- [ ] Runs from repo root
 - [ ] Spec file exists and follows template
+- [ ] Placed in appropriate domain directory (see Directory Structure)
