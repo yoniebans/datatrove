@@ -167,18 +167,10 @@ cython_debug/
 playground/
 
 # DataTrove learning examples - outputs and logs
-spec/phase1/output/
-spec/phase1/logs/
-spec/phase1/data/
-spec/phase2/output/
-spec/phase2/logs/
-spec/phase2/data/
-spec/phase3/output/
-spec/phase3/logs/
-spec/phase3/data/
-spec/phase4/output/
-spec/phase4/logs/
-spec/phase4/data/
+# Ignore all data, output, and logs directories under spec/
+spec/**/data/
+spec/**/output/
+spec/**/logs/
 spec/phase4/local/
 
 # Generated plots and analysis
