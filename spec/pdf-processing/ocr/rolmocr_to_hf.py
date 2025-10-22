@@ -78,21 +78,37 @@ def main():
                     }
                 ),
                 post_process_steps=[
-                    ExtractInferenceText()
+                    ExtractInferenceText(),
+                    HuggingFaceDatasetWriter(
+                        dataset=hf_dataset_repo,
+                        private=True,
+                        local_working_dir=OUTPUT_DIR + "/hf_upload_temp",
+                        cleanup=True
+                    )
                 ]
-            ),
-            HuggingFaceDatasetWriter(
-                dataset=hf_dataset_repo,
-                private=True,
-                local_working_dir=OUTPUT_DIR + "/hf_upload_temp",
-                cleanup=True
             )
         ],
         tasks=1,
         logging_dir=LOGS_DIR
     )
 
-    pipeline.run()
+    try:
+        pipeline.run()
+    finally:
+        # Explicitly close the HuggingFace writer to ensure files are uploaded
+        writer = None
+        for step in pipeline.pipeline:
+            if isinstance(step, InferenceRunner):
+                for post_step in step.post_process_steps:
+                    if isinstance(post_step, HuggingFaceDatasetWriter):
+                        writer = post_step
+                        break
+        if writer:
+            logger.info("Closing HuggingFace writer and uploading files...")
+            try:
+                writer.close(rank=0)
+            except Exception as e:
+                logger.error(f"Error closing writer: {e}")
 
     logger.info("Pipeline Complete!")
     logger.info(f"Dataset uploaded to: https://huggingface.co/datasets/{hf_dataset_repo}")
