@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+import fitz  # PyMuPDF
+
 from datatrove.data import Document, Media, MediaType
 from datatrove.utils.logging import logger
 
@@ -39,6 +41,16 @@ def load_pdf_documents(data_dir: str):
         with open(pdf_path, "rb") as f:
             pdf_bytes = f.read()
 
+        # Extract PDF metadata
+        try:
+            with fitz.open(pdf_path) as pdf_doc:
+                num_pages = len(pdf_doc)
+        except Exception as e:
+            logger.warning(f"Could not read PDF metadata for {pdf_path.name}: {e}")
+            num_pages = None
+
+        file_size = pdf_path.stat().st_size
+
         doc = Document(
             text="",  # Empty until extracted
             id=pdf_path.stem,
@@ -48,11 +60,17 @@ def load_pdf_documents(data_dir: str):
                     type=MediaType.DOCUMENT,
                     media_bytes=pdf_bytes,
                     url=f"file://{pdf_path}",
+                    metadata={
+                        "filename": pdf_path.name,
+                        "num_pages": num_pages,
+                        "file_size_bytes": file_size,
+                        "content_type": "application/pdf",
+                    },
                 )
             ],
             metadata={"source": str(pdf_path)}
         )
         documents.append(doc)
-        logger.info(f"Loaded: {pdf_path.name}")
+        logger.info(f"Loaded: {pdf_path.name} ({num_pages} pages, {file_size:,} bytes)")
 
     return documents

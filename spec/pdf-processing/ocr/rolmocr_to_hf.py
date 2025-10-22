@@ -59,6 +59,11 @@ def main():
 
     logger.info(f"Processing {len(documents)} PDFs with RolmOCR")
 
+    # Add OCR metadata to documents
+    for doc in documents:
+        doc.metadata["ocr_model"] = "Reducto/RolmOCR"
+        doc.metadata["max_pages_per_request"] = MAX_PAGES_PER_OCR_REQUEST
+
     # Pipeline: OCR extraction -> HuggingFace upload
     pipeline = LocalPipelineExecutor(
         pipeline=[
