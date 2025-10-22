@@ -25,7 +25,7 @@ from datatrove.pipeline.inference.run_inference import InferenceConfig, Inferenc
 from datatrove.pipeline.writers.huggingface import HuggingFaceDatasetWriter
 from datatrove.utils.logging import logger
 
-from spec.utils.local_pdf_loader import load_pdf_documents
+from local_pdf_loader import load_pdf_documents
 
 # Configuration
 DATA_DIR = "spec/pdf-processing/ocr/data"
