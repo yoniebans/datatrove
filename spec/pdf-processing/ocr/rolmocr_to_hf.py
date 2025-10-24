@@ -22,7 +22,9 @@ from datatrove.executor.local import LocalPipelineExecutor
 from datatrove.pipeline.inference.post_process import ExtractInferenceText
 from datatrove.pipeline.inference.query_builders.vision import rolmocr_query_builder
 from datatrove.pipeline.inference.run_inference import InferenceConfig, InferenceRunner
+from datatrove.pipeline.readers import JsonlReader
 from datatrove.pipeline.writers.huggingface import HuggingFaceDatasetWriter
+from datatrove.pipeline.writers.jsonl import PersistentContextJsonlWriter
 from datatrove.utils.logging import logger
 
 from local_pdf_loader import load_pdf_documents
@@ -31,6 +33,7 @@ from local_pdf_loader import load_pdf_documents
 DATA_DIR = "spec/pdf-processing/ocr/data"
 OUTPUT_DIR = "spec/pdf-processing/ocr/output/rolmocr_to_hf"
 LOGS_DIR = "spec/pdf-processing/ocr/logs/rolmocr_to_hf"
+JSONL_OUTPUT = OUTPUT_DIR + "/ocr_results"
 
 # OCR Configuration
 MAX_PAGES_PER_OCR_REQUEST = 3  # Pages per chunk: leaves ~4K tokens for output in 8K context
@@ -64,8 +67,9 @@ def main():
         doc.metadata["ocr_model"] = "Reducto/RolmOCR"
         doc.metadata["max_pages_per_request"] = MAX_PAGES_PER_OCR_REQUEST
 
-    # Pipeline: OCR extraction -> HuggingFace upload
-    pipeline = LocalPipelineExecutor(
+    # Stage 1: OCR extraction -> JSONL
+    logger.info("Stage 1: Running OCR extraction and saving to JSONL")
+    stage1_ocr = LocalPipelineExecutor(
         pipeline=[
             documents,
             InferenceRunner(
@@ -84,37 +88,48 @@ def main():
                 ),
                 post_process_steps=[
                     ExtractInferenceText(),
-                    HuggingFaceDatasetWriter(
-                        dataset=hf_dataset_repo,
-                        private=True,
-                        local_working_dir=OUTPUT_DIR + "/hf_upload_temp",
-                        expand_metadata=False,
-                        cleanup=False
-                    )
+                    PersistentContextJsonlWriter(JSONL_OUTPUT, save_media_bytes=False)
                 ]
-            )
+            ),
         ],
         tasks=1,
-        logging_dir=LOGS_DIR
+        logging_dir=LOGS_DIR + "/ocr"
     )
 
     try:
-        pipeline.run()
+        stage1_ocr.run()
     finally:
-        # Explicitly close the HuggingFace writer to ensure files are uploaded
+        # Explicitly close the writer to ensure gzip file is properly finalized
         writer = None
-        for step in pipeline.pipeline:
+        for step in stage1_ocr.pipeline:
             if isinstance(step, InferenceRunner):
                 for post_step in step.post_process_steps:
-                    if isinstance(post_step, HuggingFaceDatasetWriter):
+                    if isinstance(post_step, PersistentContextJsonlWriter):
                         writer = post_step
                         break
-        if writer:
-            logger.info("Closing HuggingFace writer and uploading files...")
-            try:
-                writer.close(rank=0)
-            except Exception as e:
-                logger.error(f"Error closing writer: {e}")
+        if writer and writer._context_entered:
+            logger.info("Closing JSONL writer context...")
+            writer.__exit__(None, None, None)
+
+    # Stage 2: Read JSONL and upload to HuggingFace
+    logger.info("Stage 2: Uploading OCR results to HuggingFace")
+    stage2_upload = LocalPipelineExecutor(
+        pipeline=[
+            JsonlReader(JSONL_OUTPUT),
+            HuggingFaceDatasetWriter(
+                dataset=hf_dataset_repo,
+                private=False,
+                local_working_dir=OUTPUT_DIR + "/hf_upload_temp",
+                expand_metadata=False,
+                cleanup=False
+            )
+        ],
+        tasks=1,
+        logging_dir=LOGS_DIR + "/upload",
+        depends=stage1_ocr
+    )
+
+    stage2_upload.run()
 
     logger.info("Pipeline Complete!")
     logger.info(f"Dataset uploaded to: https://huggingface.co/datasets/{hf_dataset_repo}")
