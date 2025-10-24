@@ -129,21 +129,7 @@ def main():
         depends=stage1_ocr
     )
 
-    try:
-        stage2_upload.run()
-    finally:
-        # Explicitly close the HuggingFace writer to clean up async resources
-        writer = None
-        for step in stage2_upload.pipeline:
-            if isinstance(step, HuggingFaceDatasetWriter):
-                writer = step
-                break
-        if writer:
-            logger.info("Closing HuggingFace writer...")
-            try:
-                writer.close(rank=0)
-            except Exception as e:
-                logger.error(f"Error closing writer: {e}")
+    stage2_upload.run()
 
     logger.info("Pipeline Complete!")
     logger.info(f"Dataset uploaded to: https://huggingface.co/datasets/{hf_dataset_repo}")
