@@ -10,10 +10,10 @@ Components:
 - HuggingFace upload: Direct upload to private HF dataset
 
 Usage:
-    # Set environment variables and place PDFs in spec/pdf-processing/ocr/data/
+    # Set environment variables and place PDFs in spec/pdf-processing/rolmocr/data/
     export HF_TOKEN=your_token_here
     export HF_DATASET_REPO=your-org/your-dataset-name
-    python spec/pdf-processing/ocr/rolmocr_to_hf.py
+    python spec/pdf-processing/rolmocr/rolmocr_to_hf.py
 """
 
 import os
@@ -30,9 +30,9 @@ from datatrove.utils.logging import logger
 from local_pdf_loader import load_pdf_documents
 
 # Configuration
-DATA_DIR = "spec/pdf-processing/ocr/data"
-OUTPUT_DIR = "spec/pdf-processing/ocr/output/rolmocr_to_hf"
-LOGS_DIR = "spec/pdf-processing/ocr/logs/rolmocr_to_hf"
+DATA_DIR = "spec/pdf-processing/rolmocr/data"
+OUTPUT_DIR = "spec/pdf-processing/rolmocr/output/rolmocr_to_hf"
+LOGS_DIR = "spec/pdf-processing/rolmocr/logs/rolmocr_to_hf"
 JSONL_OUTPUT = OUTPUT_DIR + "/ocr_results"
 
 # OCR Configuration

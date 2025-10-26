@@ -11,7 +11,7 @@ Components:
 
 Usage:
     export HF_DATASET_REPO=your-org/your-dataset-name
-    python spec/pdf-processing/ocr/utils/extract_dataset_to_md.py
+    python spec/pdf-processing/rolmocr/utils/extract_dataset_to_md.py
 """
 
 import os
@@ -22,7 +22,7 @@ from datasets import load_dataset
 from datatrove.utils.logging import logger
 
 # Configuration
-OUTPUT_DIR = "spec/pdf-processing/ocr/output/extracted_markdown"
+OUTPUT_DIR = "spec/pdf-processing/rolmocr/output/extracted_markdown"
 
 
 def main():

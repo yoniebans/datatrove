@@ -10,19 +10,19 @@ Process PDFs from a local directory using DeepSeek-OCR vision model and upload r
 - HuggingFace upload: Direct upload to private HF dataset repository
 
 ## Implementation
-**File:** `spec/pdf-processing/ocr/deepseek_to_hf.py`
+**File:** `spec/pdf-processing/deepseek-ocr/deepseek_to_hf.py`
 
 ## Data Requirements
-- Input: PDFs in `spec/pdf-processing/ocr/data/` (same PDFs as RolmOCR for comparison)
+- Input: PDFs in `spec/pdf-processing/deepseek-ocr/data/` (same PDFs as RolmOCR for comparison)
 - Output:
-  - Local: `spec/pdf-processing/ocr/output/deepseek_to_hf/`
+  - Local: `spec/pdf-processing/deepseek-ocr/output/deepseek_to_hf/`
   - Remote: HuggingFace dataset (private repository)
 
 ## Expected Results
 - All PDFs processed with DeepSeek-OCR
 - Extracted text saved to HuggingFace dataset in parquet format
 - Metadata includes: document ID, page count, source path, model name
-- Processing logs available in `spec/pdf-processing/ocr/logs/deepseek_to_hf/`
+- Processing logs available in `spec/pdf-processing/deepseek-ocr/logs/deepseek_to_hf/`
 - Results comparable with RolmOCR output for quality assessment
 
 ## Configuration
