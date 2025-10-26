@@ -149,9 +149,9 @@ pip install -e ./docling
 pip install -e ./docling-ibm-models
 
 echo "📚 Installing additional dependencies..."
-pip install openvino==2025.3.0 zstandard==0.25.0 warcio==1.7.5 s3fs==2025.9.0 orjson==3.11.3 xgboost==3.1.0
-pip install lmdeploy[all]==0.10.1
-pip install qwen-vl-utils==0.0.14
+pip install pymupdf openvino zstandard warcio s3fs orjson xgboost
+pip install lmdeploy[all]
+pip install qwen-vl-utils
 
 # ============================================================================
 # Verification
