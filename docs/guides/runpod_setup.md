@@ -150,8 +150,13 @@ pip install -e ./docling-ibm-models
 
 echo "📚 Installing additional dependencies..."
 pip install pymupdf openvino zstandard warcio s3fs orjson xgboost
-pip install lmdeploy[all]
-pip install qwen-vl-utils
+
+# RolmOCR dependencies (comment out for DeepSeek-only setup)
+# pip install lmdeploy[all]
+# pip install qwen-vl-utils
+
+echo "📚 Installing DeepSeek-OCR dependencies..."
+pip install flash-attn einops addict easydict
 
 # ============================================================================
 # Verification
@@ -192,7 +197,11 @@ Create a custom template in RunPod dashboard:
 
 **Container Image:**
 ```
+# For RolmOCR:
 runpod/pytorch:2.1.0-py3.11-cuda12.1.0-devel-ubuntu22.04
+
+# For DeepSeek-OCR (recommended):
+madiator2011/better-pytorch:cuda12.4-torch2.6.0
 ```
 
 **Docker Command:**
