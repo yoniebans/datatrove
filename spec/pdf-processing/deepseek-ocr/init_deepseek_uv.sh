@@ -47,11 +47,15 @@ echo "    (Pre-installing to control CUDA version before vLLM)"
 uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
 # ============================================================================
-# Install vLLM Nightly (Should respect existing PyTorch CUDA version)
+# Install vLLM Nightly (with --no-deps to prevent PyTorch upgrade)
 # ============================================================================
 echo "📦 Installing vLLM nightly with DeepSeek-OCR support..."
-echo "    (Should use existing CUDA 12.1 PyTorch installation)"
-uv pip install -U vllm --pre --extra-index-url https://wheels.vllm.ai/nightly --index-strategy unsafe-best-match
+echo "    (Using --no-deps to prevent CUDA version conflicts)"
+uv pip install vllm --no-deps --pre --extra-index-url https://wheels.vllm.ai/nightly --index-strategy unsafe-best-match
+
+echo "📦 Installing vLLM runtime dependencies..."
+uv pip install xformers --index-url https://download.pytorch.org/whl/cu121
+uv pip install ray psutil numpy packaging transformers
 
 # ============================================================================
 # Install Minimal Dependencies
