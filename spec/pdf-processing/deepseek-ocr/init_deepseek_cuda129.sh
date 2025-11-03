@@ -83,7 +83,7 @@ echo "📦 Installing xformers for CUDA 12.9..."
 uv pip install xformers --index-url https://download.pytorch.org/whl/cu129
 
 echo "📦 Installing other dependencies..."
-uv pip install transformers ray psutil numpy packaging pyzmq fastapi uvicorn sentencepiece
+uv pip install transformers ray psutil numpy packaging pyzmq fastapi uvicorn sentencepiece aiohttp
 
 # ============================================================================
 # Install Minimal Dependencies
