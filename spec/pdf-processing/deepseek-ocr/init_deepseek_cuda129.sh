@@ -2,6 +2,8 @@
 set -e
 
 echo "🚀 Setting up DeepSeek-OCR Environment (Vanilla Ubuntu + CUDA 12.9)..."
+echo "Container: RunPod Base 1.0.2 (Ubuntu 22.04)"
+echo ""
 
 # ============================================================================
 # Install CUDA 12.9 Toolkit
@@ -47,30 +49,10 @@ EOF
 echo "✅ CUDA environment configured"
 
 # ============================================================================
-# Install Python 3.12 if needed
+# Verify Python 3.12 and uv (pre-installed in RunPod base container)
 # ============================================================================
-if ! command -v python3.12 &> /dev/null; then
-    echo "📦 Installing Python 3.12..."
-    apt-get update -qq
-    apt-get install -y -qq software-properties-common
-    add-apt-repository -y ppa:deadsnakes/ppa
-    apt-get update -qq
-    apt-get install -y -qq python3.12 python3.12-venv python3.12-dev
-    echo "✅ Python 3.12 installed"
-else
-    echo "✅ Python 3.12 already installed"
-fi
-
-# ============================================================================
-# Install uv
-# ============================================================================
-if ! command -v uv &> /dev/null; then
-    echo "📦 Installing uv package manager..."
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-    export PATH="$HOME/.cargo/bin:$PATH"
-fi
-
-echo "✅ uv version: $(uv --version)"
+echo "✅ Python 3.12: $(python3.12 --version)"
+echo "✅ uv: $(uv --version)"
 
 # ============================================================================
 # Create Virtual Environment
