@@ -15,7 +15,7 @@ if [ ! -d "/usr/local/cuda-12.9" ]; then
     wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin
     mv cuda-ubuntu2204.pin /etc/apt/preferences.d/cuda-repository-pin-600
 
-    wget -q --show-progress https://developer.download.nvidia.com/compute/cuda/12.9.0/local_installer/cuda-repo-ubuntu2204-12-9-local_12.9.0-575.51.03-1_amd64.deb
+    wget -q --show-progress https://developer.download.nvidia.com/compute/cuda/12.9.0/local_installers/cuda-repo-ubuntu2204-12-9-local_12.9.0-575.51.03-1_amd64.deb
     dpkg -i cuda-repo-ubuntu2204-12-9-local_12.9.0-575.51.03-1_amd64.deb
     cp /var/cuda-repo-ubuntu2204-12-9-local/cuda-*-keyring.gpg /usr/share/keyrings/
 
