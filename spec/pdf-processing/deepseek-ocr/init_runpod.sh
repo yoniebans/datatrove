@@ -25,7 +25,7 @@ echo "✅ uv: $(uv --version)"
 # ============================================================================
 # Create Virtual Environment
 # ============================================================================
-VENV_DIR="/workspace/envs/deepseek-ocr-simple"
+VENV_DIR="/workspace/envs/deepseek-ocr"
 
 echo "🐍 Creating virtual environment at $VENV_DIR..."
 uv venv "$VENV_DIR" --python 3.12
