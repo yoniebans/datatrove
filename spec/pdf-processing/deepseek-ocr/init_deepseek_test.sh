@@ -40,10 +40,18 @@ echo "📦 Installing PyTorch 2.9.0 (required for vLLM nightly)..."
 pip install torch==2.9.0 torchvision==0.24.0 torchaudio==2.9.0
 
 # ============================================================================
-# Install vLLM Nightly
+# Install vLLM Nightly (use constraints to prevent PyTorch downgrade)
 # ============================================================================
 echo "📦 Installing vLLM nightly build..."
-pip install -U vllm --pre --extra-index-url https://wheels.vllm.ai/nightly
+# Create constraint file to lock PyTorch versions
+cat > /tmp/constraints.txt <<EOF
+torch==2.9.0
+torchvision==0.24.0
+torchaudio==2.9.0
+EOF
+
+# Install vLLM nightly with constraints
+pip install vllm --pre --extra-index-url https://wheels.vllm.ai/nightly -c /tmp/constraints.txt
 
 # ============================================================================
 # Install Minimal Dependencies
