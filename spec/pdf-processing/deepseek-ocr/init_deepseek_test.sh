@@ -33,25 +33,17 @@ echo "🔄 Activating environment..."
 conda activate deepseek-ocr-test
 
 # ============================================================================
-# Install PyTorch 2.9.0 First (Required for vLLM nightly)
+# Install PyTorch 2.6.0 (Per DeepSeek-OCR tested configuration)
 # ============================================================================
-echo "📦 Installing PyTorch 2.9.0 (required for vLLM nightly)..."
-# PyTorch 2.9.0 with CUDA support from main PyPI
-pip install torch==2.9.0 torchvision==0.24.0 torchaudio==2.9.0
+echo "📦 Installing PyTorch 2.6.0 (DeepSeek-OCR tested version)..."
+# Using CUDA 12.1 wheels (compatible with CUDA 12.4)
+pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0
 
 # ============================================================================
-# Install vLLM Nightly (use constraints to prevent PyTorch downgrade)
+# Install vLLM 0.8.5 (Per DeepSeek-OCR tested configuration)
 # ============================================================================
-echo "📦 Installing vLLM nightly build..."
-# Create constraint file to lock PyTorch versions
-cat > /tmp/constraints.txt <<EOF
-torch==2.9.0
-torchvision==0.24.0
-torchaudio==2.9.0
-EOF
-
-# Install vLLM nightly with constraints
-pip install vllm --pre --extra-index-url https://wheels.vllm.ai/nightly -c /tmp/constraints.txt
+echo "📦 Installing vLLM 0.8.5 (DeepSeek-OCR tested version)..."
+pip install vllm==0.8.5
 
 # ============================================================================
 # Install Minimal Dependencies
