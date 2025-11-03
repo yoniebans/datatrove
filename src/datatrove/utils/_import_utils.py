@@ -1,3 +1,4 @@
+import importlib.metadata
 import importlib.resources
 import os
 from functools import lru_cache
