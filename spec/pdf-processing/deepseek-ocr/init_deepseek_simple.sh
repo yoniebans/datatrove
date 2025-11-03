@@ -37,7 +37,8 @@ source "$VENV_DIR/bin/activate"
 # Install vLLM Nightly (WITH dependencies - should work with CUDA 12.9 driver)
 # ============================================================================
 echo "📦 Installing vLLM nightly (cu129) with all dependencies..."
-uv pip install 'vllm>=0.11.1rc0' --pre --extra-index-url https://wheels.vllm.ai/nightly --index-strategy unsafe-best-match
+echo "    Using both vLLM nightly and PyTorch cu129 indexes..."
+uv pip install 'vllm>=0.11.1rc0' --pre --extra-index-url https://wheels.vllm.ai/nightly --extra-index-url https://download.pytorch.org/whl/cu129 --index-strategy unsafe-best-match
 
 # ============================================================================
 # Install Minimal Dependencies
