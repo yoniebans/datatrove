@@ -20,9 +20,7 @@ from datatrove.utils._import_utils import check_required_dependencies
 from datatrove.utils.logging import logger
 
 # Check dependencies before importing
-check_required_dependencies("pymupdf", ["fitz"])
-check_required_dependencies("pillow", ["PIL"])
-check_required_dependencies("vllm", ["vllm"])
+check_required_dependencies("DeepSeek OCR test", [("fitz", "pymupdf"), ("PIL", "pillow"), "vllm"])
 
 import fitz
 from PIL import Image
