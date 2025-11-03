@@ -6,21 +6,24 @@ echo "Container: RunPod Base 1.0.2 (Ubuntu 22.04)"
 echo ""
 
 # ============================================================================
-# Install CUDA 12.9 Toolkit
+# Install CUDA 12.9 Toolkit (via apt - official NVIDIA method)
 # ============================================================================
 echo "📦 Installing CUDA 12.9 Toolkit..."
 
-CUDA_VERSION="12.9.0"
-CUDA_INSTALLER_URL="https://developer.download.nvidia.com/compute/cuda/${CUDA_VERSION}/local_installers/cuda_${CUDA_VERSION}_560.35.05_linux.run"
-
 if [ ! -d "/usr/local/cuda-12.9" ]; then
-    echo "Downloading CUDA 12.9 installer..."
-    wget -q --show-progress "$CUDA_INSTALLER_URL" -O /tmp/cuda_installer.run
+    echo "Downloading CUDA repository packages..."
+    wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin
+    mv cuda-ubuntu2204.pin /etc/apt/preferences.d/cuda-repository-pin-600
 
-    echo "Installing CUDA 12.9 (toolkit only, no driver)..."
-    sh /tmp/cuda_installer.run --silent --toolkit --no-man-page
+    wget -q --show-progress https://developer.download.nvidia.com/compute/cuda/12.9.0/local_installer/cuda-repo-ubuntu2204-12-9-local_12.9.0-575.51.03-1_amd64.deb
+    dpkg -i cuda-repo-ubuntu2204-12-9-local_12.9.0-575.51.03-1_amd64.deb
+    cp /var/cuda-repo-ubuntu2204-12-9-local/cuda-*-keyring.gpg /usr/share/keyrings/
 
-    rm /tmp/cuda_installer.run
+    echo "Installing CUDA toolkit via apt..."
+    apt-get update -qq
+    apt-get -y install cuda-toolkit-12-9
+
+    rm cuda-repo-ubuntu2204-12-9-local_12.9.0-575.51.03-1_amd64.deb
     echo "✅ CUDA 12.9 installed"
 else
     echo "✅ CUDA 12.9 already installed"
