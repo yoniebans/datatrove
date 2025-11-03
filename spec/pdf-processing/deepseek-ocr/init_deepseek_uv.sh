@@ -40,11 +40,11 @@ echo "🔄 Activating environment..."
 source "$VENV_DIR/bin/activate"
 
 # ============================================================================
-# Install PyTorch 2.6.0 with CUDA 12.1 (compatible with CUDA 12.4 driver)
+# Install PyTorch with CUDA 12.1 (compatible with CUDA 12.4 driver)
 # ============================================================================
-echo "📦 Installing PyTorch 2.6.0 with CUDA 12.1 support..."
+echo "📦 Installing PyTorch with CUDA 12.1 support..."
 echo "    (Pre-installing to control CUDA version before vLLM)"
-uv pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu121
+uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
 # ============================================================================
 # Install vLLM Nightly (Should respect existing PyTorch CUDA version)
