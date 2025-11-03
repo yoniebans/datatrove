@@ -40,10 +40,10 @@ echo "📦 Installing PyTorch 2.6.0 (DeepSeek-OCR tested version)..."
 pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0
 
 # ============================================================================
-# Install vLLM 0.8.5 (Per DeepSeek-OCR tested configuration)
+# Install vLLM Nightly (Has DeepSeek-OCR support since Oct 23, 2025)
 # ============================================================================
-echo "📦 Installing vLLM 0.8.5 (DeepSeek-OCR tested version)..."
-pip install vllm==0.8.5
+echo "📦 Installing vLLM nightly with DeepSeek-OCR support..."
+pip install vllm --pre --extra-index-url https://wheels.vllm.ai/nightly
 
 # ============================================================================
 # Install Minimal Dependencies
