@@ -36,7 +36,8 @@ conda activate deepseek-ocr-test
 # Install PyTorch 2.9.0 First (Required for vLLM nightly)
 # ============================================================================
 echo "📦 Installing PyTorch 2.9.0 (required for vLLM nightly)..."
-pip install torch==2.9.0 torchvision==0.24.0 torchaudio==2.9.0 --index-url https://download.pytorch.org/whl/cu121
+# PyTorch 2.9.0 with CUDA support from main PyPI
+pip install torch==2.9.0 torchvision==0.24.0 torchaudio==2.9.0
 
 # ============================================================================
 # Install vLLM Nightly
