@@ -72,7 +72,8 @@ source "$VENV_DIR/bin/activate"
 # Install vLLM Nightly (built for CUDA 12.9)
 # ============================================================================
 echo "📦 Installing vLLM nightly (cu129) with DeepSeek-OCR support..."
-uv pip install vllm --pre --extra-index-url https://wheels.vllm.ai/nightly --index-strategy unsafe-best-match
+echo "    Forcing nightly version to avoid uv resolver choosing stable..."
+uv pip install 'vllm>=0.11.1rc6' --pre --extra-index-url https://wheels.vllm.ai/nightly --index-strategy unsafe-best-match
 
 # ============================================================================
 # Install Minimal Dependencies
