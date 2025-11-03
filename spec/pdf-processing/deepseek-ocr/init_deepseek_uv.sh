@@ -55,7 +55,7 @@ uv pip install vllm --no-deps --pre --extra-index-url https://wheels.vllm.ai/nig
 
 echo "📦 Installing vLLM runtime dependencies..."
 uv pip install xformers --index-url https://download.pytorch.org/whl/cu121
-uv pip install ray psutil numpy packaging transformers
+uv pip install ray psutil numpy packaging transformers pyzmq
 
 # ============================================================================
 # Install Minimal Dependencies
