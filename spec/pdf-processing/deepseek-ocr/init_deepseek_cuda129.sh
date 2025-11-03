@@ -73,7 +73,7 @@ source "$VENV_DIR/bin/activate"
 # ============================================================================
 echo "📦 Installing vLLM nightly (cu129) with DeepSeek-OCR support..."
 echo "    Forcing nightly version to avoid uv resolver choosing stable..."
-uv pip install 'vllm>=0.11.1rc6' --pre --extra-index-url https://wheels.vllm.ai/nightly --index-strategy unsafe-best-match
+uv pip install 'vllm>=0.11.1rc0' --pre --extra-index-url https://wheels.vllm.ai/nightly --index-strategy unsafe-best-match
 
 # ============================================================================
 # Install Minimal Dependencies
