@@ -40,11 +40,18 @@ echo "🔄 Activating environment..."
 source "$VENV_DIR/bin/activate"
 
 # ============================================================================
-# Install vLLM Nightly (Following vLLM Recipes guide exactly)
+# Install PyTorch 2.6.0 with CUDA 12.1 (compatible with CUDA 12.4 driver)
+# ============================================================================
+echo "📦 Installing PyTorch 2.6.0 with CUDA 12.1 support..."
+echo "    (Pre-installing to control CUDA version before vLLM)"
+uv pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu121
+
+# ============================================================================
+# Install vLLM Nightly (Should respect existing PyTorch CUDA version)
 # ============================================================================
 echo "📦 Installing vLLM nightly with DeepSeek-OCR support..."
-echo "    (PyTorch will be installed automatically as a dependency)"
-uv pip install -U vllm --pre --extra-index-url https://wheels.vllm.ai/nightly
+echo "    (Should use existing CUDA 12.1 PyTorch installation)"
+uv pip install -U vllm --pre --extra-index-url https://wheels.vllm.ai/nightly --index-strategy unsafe-best-match
 
 # ============================================================================
 # Install Minimal Dependencies
