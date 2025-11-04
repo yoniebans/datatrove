@@ -43,12 +43,12 @@ uv pip install 'vllm>=0.11.1rc0' --pre --extra-index-url https://wheels.vllm.ai/
 # ============================================================================
 # Install Minimal Dependencies
 # ============================================================================
-echo "📦 Installing minimal dependencies..."
-uv pip install pymupdf pillow
-
-# Install DataTrove
+echo "📦 Installing DataTrove with all dependencies..."
 cd /workspace/repos/datatrove
-uv pip install -e .
+uv pip install -e ".[all]"
+
+echo "📦 Installing additional dependencies..."
+uv pip install pymupdf pillow openvino zstandard warcio orjson xgboost
 
 # ============================================================================
 # Verification
