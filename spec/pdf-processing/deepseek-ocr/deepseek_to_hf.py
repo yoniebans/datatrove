@@ -75,7 +75,7 @@ def main():
             InferenceRunner(
                 query_builder=deepseek_ocr_query_builder,
                 config=InferenceConfig(
-                    server_type="vllm",
+                    server_type="deepseek_ocr",
                     model_name_or_path="deepseek-ai/DeepSeek-OCR",
                     model_max_context=8192,
                     max_concurrent_requests=1,

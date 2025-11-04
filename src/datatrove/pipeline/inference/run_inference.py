@@ -23,6 +23,7 @@ from datatrove.data import Document
 from datatrove.io import DataFolderLike, get_datafolder
 from datatrove.pipeline.base import PipelineStep
 from datatrove.pipeline.inference.servers import (
+    DeepSeekOCRServer,
     DummyServer,
     InferenceServer,
     LMDeployServer,
@@ -149,7 +150,7 @@ class InferenceConfig:
             This is useful for scenarios where the job can be killed at any time and you don't want to lose all the progress
         model_kwargs: Additional keyword arguments for model initialization (Will be provided as --key=value to the model)
     """
-    server_type: Literal["sglang", "vllm", "dummy", "lmdeploy"]
+    server_type: Literal["sglang", "vllm", "dummy", "lmdeploy", "deepseek_ocr"]
     model_name_or_path: str
     temperature: float = 0.0
     model_max_context: int = 8192
@@ -278,6 +279,12 @@ class InferenceRunner(PipelineStep):
             )
         elif stype == "lmdeploy":
             return LMDeployServer(
+                self.config.model_name_or_path,
+                self.config.model_max_context,
+                self.config.model_kwargs,
+            )
+        elif stype == "deepseek_ocr":
+            return DeepSeekOCRServer(
                 self.config.model_name_or_path,
                 self.config.model_max_context,
                 self.config.model_kwargs,
