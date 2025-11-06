@@ -63,7 +63,7 @@ def test_chandra_ocr(pdf_path: str, max_pages: int = 3):
         from chandra.model import InferenceManager
         from chandra.model.schema import BatchInputItem
 
-        manager = InferenceManager(method="vllm")
+        manager = InferenceManager(method="hf")
         logger.info("Model loaded successfully")
     except Exception as e:
         logger.error(f"Failed to load model: {e}")
