@@ -1,7 +1,11 @@
-# RunPod Persistent Volume Setup Guide
-## DataTrove + Docling + RolmOCR Pipeline
+# RunPod Setup Guide
+## DataTrove OCR Pipelines
 
-This guide documents how to set up a persistent RunPod environment for the FinePDFs pipeline with minimal setup time on new instances.
+This guide documents how to set up RunPod environments for DataTrove OCR pipelines with minimal setup time on new instances.
+
+**Supported OCR Models:**
+- **DeepSeek-OCR**: Uses vLLM with uv package manager (recommended for new projects)
+- **RolmOCR**: Uses Docling + RolmOCR with conda (legacy setup)
 
 ---
 
@@ -14,8 +18,30 @@ This guide documents how to set up a persistent RunPod environment for the FineP
 
 **Architecture:**
 - **Persistent Volume**: Repos, HuggingFace models, test data
-- **Ephemeral Instance**: Conda environment, Python packages (hardware-specific)
+- **Ephemeral/Persistent Environments**: Depends on OCR model (see below)
 - **Initialization Script**: Automates environment setup on new instances
+
+---
+
+## Environment Approaches
+
+### DeepSeek-OCR (uv-based)
+- **Package Manager**: `uv` (faster, modern)
+- **Environment Location**: `/workspace/envs/deepseek-ocr` (persistent on volume)
+- **Dependencies**: vLLM nightly, PyTorch with CUDA 12.9
+- **Container**: `runpod/base:1.0.2-cuda1290-ubuntu2204`
+- **Setup Script**: `spec/pdf-processing/deepseek-ocr/init_runpod.sh`
+- **Pros**: Environment persists across instances, faster package resolution
+
+### RolmOCR (conda-based)
+- **Package Manager**: `conda` (traditional)
+- **Environment Location**: `~/miniconda3/envs/datatrove-docling` (ephemeral, recreated each time)
+- **Dependencies**: Docling, lmdeploy, qwen-vl-utils
+- **Container**: `runpod/pytorch:2.1.0-py3.11-cuda12.1.0-devel-ubuntu22.04`
+- **Setup Script**: `spec/pdf-processing/rolmocr/init_runpod.sh`
+- **Pros**: Familiar conda workflow, works with Docling stack
+
+**Note**: Future versions will standardize on uv for all models.
 
 ---
 
@@ -70,128 +96,47 @@ mkdir -p spec/phase4/data
 
 ---
 
-## 3. Initialization Script
+## 3. Initialization Scripts
 
-Create `/workspace/init.sh` on your volume (one-time setup):
+Each OCR model has its own initialization script. Copy the appropriate one to your volume:
 
+### DeepSeek-OCR
 ```bash
-#!/bin/bash
-set -e
-
-echo "🚀 Initializing DataTrove Environment..."
-
-# Note: SSH is handled by RunPod's /start.sh script (runs before this)
-# Your SSH keys from RunPod account settings are automatically configured
-
-# ============================================================================
-# Environment Variables
-# ============================================================================
-export HF_HOME=/workspace/models
-export TRANSFORMERS_CACHE=/workspace/models
-export LAYOUT_VINO_PATH="/workspace/repos/Docling-sync/models/v2-quant.xml"
-export HF_HUB_ENABLE_HF_TRANSFER=0
-export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-
-# Persist to .bashrc
-cat >> ~/.bashrc <<'EOF'
-export HF_HOME=/workspace/models
-export TRANSFORMERS_CACHE=/workspace/models
-export LAYOUT_VINO_PATH="/workspace/repos/Docling-sync/models/v2-quant.xml"
-export HF_HUB_ENABLE_HF_TRANSFER=0
-export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-EOF
-
-# ============================================================================
-# System Dependencies
-# ============================================================================
-echo "📦 Installing system dependencies..."
-apt update && apt install -y git curl wget build-essential
-
-# ============================================================================
-# Miniconda
-# ============================================================================
-if [ ! -d "$HOME/miniconda3" ]; then
-    echo "📥 Installing Miniconda..."
-    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh
-    bash /tmp/miniconda.sh -b -p $HOME/miniconda3
-    rm /tmp/miniconda.sh
-fi
-
-# Initialize conda for this shell and all future SSH sessions
-export PATH="$HOME/miniconda3/bin:$PATH"
-eval "$($HOME/miniconda3/bin/conda shell.bash hook)"
-$HOME/miniconda3/bin/conda init bash
-
-# Accept Conda TOS
-echo "📜 Accepting Conda Terms of Service..."
-conda config --set channel_priority flexible
-yes | conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main || true
-yes | conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r || true
-
-# ============================================================================
-# Conda Environment
-# ============================================================================
-echo "🐍 Creating conda environment..."
-conda create -n datatrove-docling python=3.12 -y
-conda activate datatrove-docling
-
-# ============================================================================
-# Python Dependencies
-# ============================================================================
-echo "📚 Installing DataTrove..."
-cd /workspace/repos/datatrove
-pip install -e ".[dev,all]"
-
-echo "📚 Installing Docling-sync..."
-cd /workspace/repos/Docling-sync
-pip install -e ./docling-core
-pip install -e ./docling
-pip install -e ./docling-ibm-models
-
-echo "📚 Installing additional dependencies..."
-pip install pymupdf openvino zstandard warcio s3fs orjson xgboost
-pip install lmdeploy[all]
-pip install qwen-vl-utils
-
-# ============================================================================
-# Verification
-# ============================================================================
-echo "✅ Verifying setup..."
-
-# Test CUDA
-python -c "import torch; assert torch.cuda.is_available(), 'CUDA not available'; print(f'✅ CUDA available: {torch.cuda.get_device_name(0)}')"
-
-# Test Docling
-cd /workspace/repos/datatrove
-python -c "
-from src.datatrove.pipeline.media.extractors.extractors import DoclingExtractor
-extractor = DoclingExtractor(timeout=60)
-print('✅ DoclingExtractor initialized successfully!')
-"
-
-echo "🎉 Initialization complete!"
-echo ""
-echo "To start working:"
-echo "  conda activate datatrove-docling"
-echo "  cd /workspace/repos/datatrove"
-echo "  python spec/phase4/examples/01_local_pdfs.py"
-```
-
-Make it executable:
-```bash
+# Copy init script to volume
+cp /workspace/repos/datatrove/spec/pdf-processing/deepseek-ocr/init_runpod.sh /workspace/init.sh
 chmod +x /workspace/init.sh
 ```
+
+**Script location**: `spec/pdf-processing/deepseek-ocr/init_runpod.sh`
+
+### RolmOCR
+```bash
+# Copy init script to volume
+cp /workspace/repos/datatrove/spec/pdf-processing/rolmocr/init_runpod.sh /workspace/init.sh
+chmod +x /workspace/init.sh
+```
+
+**Script location**: `spec/pdf-processing/rolmocr/init_runpod.sh`
+
+**Note**: These scripts handle all environment setup automatically. Review them to understand what gets installed.
 
 ---
 
 ## 4. RunPod Template Configuration
 
-Create a custom template in RunPod dashboard:
+Create a custom template in RunPod dashboard for your chosen OCR model.
 
 ### 4.1 Template Settings
 
 **Container Image:**
+
+Choose based on your OCR model (see [RunPod Official Containers](https://github.com/runpod/containers/tree/main/official-templates)):
+
 ```
+# For DeepSeek-OCR:
+runpod/base:1.0.2-cuda1290-ubuntu2204
+
+# For RolmOCR:
 runpod/pytorch:2.1.0-py3.11-cuda12.1.0-devel-ubuntu22.04
 ```
 
@@ -224,9 +169,9 @@ HF_HUB_ENABLE_HF_TRANSFER=0
 
 ### 4.2 Save Template
 
-1. Name: `datatrove-finepdfs`
+1. Name: `datatrove-deepseek-ocr` or `datatrove-rolmocr` (based on your choice)
 2. Save template
-3. Use for all future instances
+3. Use for all future instances of that model type
 
 ---
 
@@ -236,7 +181,7 @@ HF_HUB_ENABLE_HF_TRANSFER=0
 
 1. Go to RunPod → **GPU Pods**
 2. Click **Deploy**
-3. Select template: `datatrove-finepdfs`
+3. Select your template (`datatrove-deepseek-ocr` or `datatrove-rolmocr`)
 4. Choose GPU: RTX PRO 6000 (or available)
 5. Click **Deploy On-Demand**
 
@@ -255,6 +200,19 @@ Initialization takes ~5 minutes (vs 30+ minutes manual setup).
 
 ### 5.3 Start Working
 
+**For DeepSeek-OCR:**
+```bash
+source /workspace/envs/deepseek-ocr/bin/activate
+cd /workspace/repos/datatrove
+
+# Pull latest changes
+git pull
+
+# Run pipeline
+python spec/pdf-processing/deepseek-ocr/deepseek_to_hf.py
+```
+
+**For RolmOCR:**
 ```bash
 conda activate datatrove-docling
 cd /workspace/repos/datatrove
@@ -280,19 +238,30 @@ When done, **terminate the instance** (not the volume):
 ```
 /workspace/
 ├── repos/
-│   ├── datatrove/                    # Main repo
+│   ├── datatrove/                               # Main repo
+│   │   ├── spec/pdf-processing/
+│   │   │   ├── deepseek-ocr/
+│   │   │   │   ├── data/                        # DeepSeek PDFs
+│   │   │   │   ├── output/                      # DeepSeek outputs
+│   │   │   │   └── logs/                        # DeepSeek logs
+│   │   │   └── rolmocr/
+│   │   │       ├── data/                        # RolmOCR PDFs
+│   │   │       └── utils/                       # PDF utilities
 │   │   ├── spec/phase4/
-│   │   │   ├── data/                 # Test PDFs
-│   │   │   ├── output/               # Pipeline outputs
-│   │   │   └── logs/                 # Pipeline logs
+│   │   │   ├── data/                            # Legacy RolmOCR PDFs
+│   │   │   ├── output/                          # Legacy outputs
+│   │   │   └── logs/                            # Legacy logs
 │   │   └── ...
-│   └── Docling-sync/                 # Docling fork
+│   └── Docling-sync/                            # Docling fork (RolmOCR only)
 │       └── models/
-│           └── v2-quant.xml          # Optimized layout model
-├── models/                           # HuggingFace cache
+│           └── v2-quant.xml                     # Optimized layout model
+├── envs/
+│   └── deepseek-ocr/                            # DeepSeek uv environment (persistent)
+├── models/                                      # HuggingFace cache
 │   └── hub/
-│       └── models--Reducto--RolmOCR/ # 15GB cached model
-└── data/                             # Shared datasets (optional)
+│       ├── models--deepseek-ai--DeepSeek-OCR/   # DeepSeek model
+│       └── models--Reducto--RolmOCR/            # RolmOCR model
+└── data/                                        # Shared datasets (optional)
 ```
 
 ---
@@ -324,17 +293,26 @@ git checkout -b experiment/new-feature
 /workspace/init.sh
 ```
 
-### Issue: Conda environment missing after restart
+### Issue: Environment missing after restart
 
-**Solution:** Environment is ephemeral by design. The init script recreates it:
+**Solution:**
+
+For RolmOCR (conda - ephemeral by design):
 ```bash
+# Recreate with init script
 /workspace/init.sh
+
+# Or manually activate if it exists
+conda activate datatrove-docling
 ```
 
-Or manually:
+For DeepSeek-OCR (uv - should persist):
 ```bash
-conda activate datatrove-docling  # If it exists
-# Otherwise, rerun init script
+# Environment should still exist on volume
+source /workspace/envs/deepseek-ocr/bin/activate
+
+# If missing, rerun init script
+/workspace/init.sh
 ```
 
 ### Issue: Volume not mounted
@@ -413,6 +391,30 @@ CMD ["/workspace/init.sh"]
 ## 11. Quick Reference
 
 ### Essential Commands
+
+**DeepSeek-OCR:**
+```bash
+# Activate environment
+source /workspace/envs/deepseek-ocr/bin/activate
+
+# Update repos
+cd /workspace/repos/datatrove && git pull
+
+# Run pipeline
+python spec/pdf-processing/deepseek-ocr/deepseek_to_hf.py
+
+# Check GPU
+nvidia-smi
+
+# Monitor GPU in real-time
+watch -n 1 nvidia-smi
+
+# Clean up outputs
+rm -rf /workspace/repos/datatrove/spec/pdf-processing/deepseek-ocr/output/*
+rm -rf /workspace/repos/datatrove/spec/pdf-processing/deepseek-ocr/logs/*
+```
+
+**RolmOCR:**
 ```bash
 # Activate environment
 conda activate datatrove-docling
@@ -422,7 +424,6 @@ cd /workspace/repos/datatrove && git pull
 cd /workspace/repos/Docling-sync && git pull
 
 # Run pipeline
-cd /workspace/repos/datatrove
 python spec/phase4/examples/01_local_pdfs.py
 
 # Check GPU
@@ -439,16 +440,17 @@ rm -rf /workspace/repos/datatrove/spec/phase4/logs/*
 ### First-Time Setup Checklist
 - [ ] Create volume in RunPod dashboard
 - [ ] Deploy instance with volume attached
-- [ ] Run initial setup (clone repos, create init.sh)
+- [ ] Run initial setup (clone repos)
+- [ ] Copy appropriate init script to `/workspace/init.sh`
 - [ ] Test init script works
-- [ ] Create RunPod template
-- [ ] Upload test PDFs to `/workspace/repos/datatrove/spec/phase4/data/`
+- [ ] Create RunPod template with correct container image
+- [ ] Upload test PDFs to appropriate data directory
 - [ ] Run test pipeline
 
 ### Per-Session Checklist
 - [ ] Deploy instance from template
 - [ ] Wait for init script to complete (~5 min)
-- [ ] Activate conda environment
+- [ ] Activate environment (uv or conda depending on model)
 - [ ] Pull latest changes
 - [ ] Run pipeline
 - [ ] Terminate instance when done
@@ -459,6 +461,9 @@ rm -rf /workspace/repos/datatrove/spec/phase4/logs/*
 
 For issues specific to RunPod setup:
 - RunPod Docs: https://docs.runpod.io/
+- RunPod Containers: https://github.com/runpod/containers/tree/main/official-templates
 - Community: https://discord.gg/runpod
 
-For pipeline issues, see `lambda_setup.md`.
+For model-specific issues, check the respective init scripts:
+- DeepSeek-OCR: `spec/pdf-processing/deepseek-ocr/init_runpod.sh`
+- RolmOCR: `spec/pdf-processing/rolmocr/init_runpod.sh`
