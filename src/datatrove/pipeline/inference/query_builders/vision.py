@@ -158,3 +158,89 @@ async def deepseek_ocr_query_builder(runner: InferenceRunner, doc: Document) -> 
         }
 
     pdf_doc.close()
+
+
+async def chandra_ocr_query_builder(runner: InferenceRunner, doc: Document) -> AsyncGenerator[dict, None]:
+    """Convert PDF document to Chandra OCR vision requests.
+
+    Chandra OCR specifications:
+    - Model: 9B parameter vision-language model
+    - Output: HTML with bbox layout information
+    - Post-processing: Requires parse_markdown() to convert to markdown
+    - Server: vLLM with OpenAI-compatible API
+
+    Args:
+        runner: InferenceRunner instance (provides config.model_name_or_path)
+        doc: Document with Media object containing PDF bytes
+
+    Yields:
+        Chandra OCR compatible vision request dicts, one per page
+
+    Raises:
+        ValueError: If document has no media bytes
+
+    Notes:
+        - Processes pages individually for stability
+        - Uses ocr_layout prompt from Chandra
+        - Output is HTML with bbox data - use ExtractChandraMarkdown post-process step
+    """
+    # Get PDF bytes from Media object
+    if not doc.media or not doc.media[0].media_bytes:
+        raise ValueError(f"Document {doc.id} has no media bytes")
+
+    pdf_bytes = doc.media[0].media_bytes
+    pdf_doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    total_pages = len(pdf_doc)
+
+    # Import Chandra's prompt mapping
+    try:
+        from chandra.prompts import PROMPT_MAPPING
+        prompt = PROMPT_MAPPING["ocr_layout"]
+    except ImportError:
+        # Fallback if chandra-ocr not installed
+        raise ImportError(
+            "chandra-ocr package required for chandra_ocr_query_builder. "
+            "Install with: pip install chandra-ocr"
+        )
+
+    # Check if max_pages_per_request is configured (default to 1 page per request)
+    pages_per_chunk = runner.config.model_kwargs.get('max_pages_per_request', 1)
+
+    # Process pages in chunks
+    for chunk_start in range(0, total_pages, pages_per_chunk):
+        chunk_end = min(chunk_start + pages_per_chunk, total_pages)
+        page_images = []
+
+        # Render pages for this chunk
+        for page_num in range(chunk_start, chunk_end):
+            page = pdf_doc.load_page(page_num)
+
+            # Use reasonable resolution for Chandra
+            base64_image = render_page_to_base64png_pymupdf(
+                page,
+                resize_longest_side_pixels=1280,
+                max_visual_tokens=2048
+            )
+
+            page_images.append({
+                "type": "image_url",
+                "image_url": {"url": f"data:image/png;base64,{base64_image}"}
+            })
+
+        # Yield request for this chunk using Chandra's prompt
+        yield {
+            "model": runner.config.model_name_or_path,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        *page_images
+                    ]
+                }
+            ],
+            "max_tokens": runner.config.model_kwargs.get('max_output_tokens', 8192),
+            "temperature": 0.0
+        }
+
+    pdf_doc.close()

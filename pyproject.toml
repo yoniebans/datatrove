@@ -68,6 +68,10 @@ vllm = [
 sglang = [
     "sglang[all]"
 ]
+chandra = [
+    "chandra-ocr",
+    "pymupdf"
+]
 decont = [
     "lighteval>=0.3.0"
 ]
