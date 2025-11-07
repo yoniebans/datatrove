@@ -81,10 +81,6 @@ def main():
                     model_max_context=8192,
                     max_concurrent_requests=4,
                     max_concurrent_tasks=1,
-                    model_kwargs={
-                        "max_pages_per_request": MAX_PAGES_PER_OCR_REQUEST,
-                        "max_output_tokens": 8192,
-                    }
                 ),
                 post_process_steps=[
                     ExtractChandraMarkdown(
