@@ -78,7 +78,6 @@ def main():
                 config=InferenceConfig(
                     server_type="vllm",
                     model_name_or_path="chandra/chandra-v1-9b",
-                    base_url="http://localhost:8000/v1",
                     model_max_context=8192,
                     max_concurrent_requests=4,
                     max_concurrent_tasks=1,
