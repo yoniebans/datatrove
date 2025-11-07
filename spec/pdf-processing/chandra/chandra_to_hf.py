@@ -65,7 +65,7 @@ def main():
 
     # Add OCR metadata to documents
     for doc in documents:
-        doc.metadata["ocr_model"] = "chandra/chandra-v1-9b"
+        doc.metadata["ocr_model"] = "datalab-to/chandra"
         doc.metadata["max_pages_per_request"] = MAX_PAGES_PER_OCR_REQUEST
 
     # Stage 1: OCR extraction -> JSONL
@@ -77,7 +77,7 @@ def main():
                 query_builder=chandra_ocr_query_builder,
                 config=InferenceConfig(
                     server_type="vllm",
-                    model_name_or_path="chandra/chandra-v1-9b",
+                    model_name_or_path="datalab-to/chandra",
                     model_max_context=8192,
                     max_concurrent_requests=4,
                     max_concurrent_tasks=1,
