@@ -239,7 +239,7 @@ async def chandra_ocr_query_builder(runner: InferenceRunner, doc: Document) -> A
                     ]
                 }
             ],
-            "max_tokens": runner.config.model_kwargs.get('max_output_tokens', 8192) if runner.config.model_kwargs else 8192,
+            "max_tokens": runner.config.model_kwargs.get('max_output_tokens', 4096) if runner.config.model_kwargs else 4096,
             "temperature": 0.0
         }
 
