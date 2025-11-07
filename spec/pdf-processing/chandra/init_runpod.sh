@@ -39,9 +39,9 @@ source "$VENV_DIR/bin/activate"
 echo "📦 Installing Chandra OCR..."
 uv pip install chandra-ocr
 
-echo "📦 Installing DataTrove..."
+echo "📦 Installing DataTrove with vLLM..."
 cd /workspace/repos/datatrove
-uv pip install -e ".[all]"
+uv pip install -e ".[all,vllm]"
 
 echo "📦 Installing PDF processing dependencies..."
 uv pip install pymupdf
