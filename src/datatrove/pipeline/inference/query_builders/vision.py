@@ -204,7 +204,7 @@ async def chandra_ocr_query_builder(runner: InferenceRunner, doc: Document) -> A
         )
 
     # Check if max_pages_per_request is configured (default to 1 page per request)
-    pages_per_chunk = runner.config.model_kwargs.get('max_pages_per_request', 1)
+    pages_per_chunk = runner.config.model_kwargs.get('max_pages_per_request', 1) if runner.config.model_kwargs else 1
 
     # Process pages in chunks
     for chunk_start in range(0, total_pages, pages_per_chunk):
@@ -239,7 +239,7 @@ async def chandra_ocr_query_builder(runner: InferenceRunner, doc: Document) -> A
                     ]
                 }
             ],
-            "max_tokens": runner.config.model_kwargs.get('max_output_tokens', 8192),
+            "max_tokens": runner.config.model_kwargs.get('max_output_tokens', 8192) if runner.config.model_kwargs else 8192,
             "temperature": 0.0
         }
 
