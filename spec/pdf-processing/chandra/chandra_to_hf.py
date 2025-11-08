@@ -20,7 +20,7 @@ Usage:
 import os
 
 from datatrove.executor.local import LocalPipelineExecutor
-from datatrove.pipeline.inference.post_process import ExtractChandraMarkdown
+from datatrove.pipeline.inference.post_process import ProcessChandraOutput
 from datatrove.pipeline.inference.query_builders.vision import chandra_ocr_query_builder
 from datatrove.pipeline.inference.run_inference import InferenceConfig, InferenceRunner
 from datatrove.pipeline.readers import JsonlReader
@@ -35,6 +35,7 @@ DATA_DIR = "spec/pdf-processing/chandra/data"
 OUTPUT_DIR = "spec/pdf-processing/chandra/output/chandra_to_hf"
 LOGS_DIR = "spec/pdf-processing/chandra/logs/chandra_to_hf"
 JSONL_OUTPUT = OUTPUT_DIR + "/ocr_results"
+RAW_OUTPUT = OUTPUT_DIR + "/raw_output"
 
 # OCR Configuration
 MAX_PAGES_PER_OCR_REQUEST = 1  # Chandra: 1 page per request for stability
@@ -83,7 +84,8 @@ def main():
                     max_concurrent_tasks=1,
                 ),
                 post_process_steps=[
-                    ExtractChandraMarkdown(
+                    ProcessChandraOutput(
+                        output_dir=RAW_OUTPUT,
                         remove_inference_results=True,
                         include_images=False
                     ),
