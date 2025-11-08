@@ -1,9 +1,13 @@
 """Chandra OCR post-processing steps."""
 
+from io import BytesIO
 from pathlib import Path
 from typing import Iterable
 
 import fitz
+from chandra.model import parse_markdown
+from chandra.output import extract_images, parse_chunks
+from PIL import Image
 
 from datatrove.data import Document
 from datatrove.pipeline.base import PipelineStep
@@ -30,9 +34,6 @@ class ProcessChandraOutput(PipelineStep):
         include_images: If True, includes image references in markdown. Default: False.
         resize_longest_side_pixels: Resolution to render PDF pages (default: 1280, matches query builder)
 
-    Raises:
-        ImportError: If chandra-ocr package is not installed.
-
     Output structure:
         {output_dir}/{doc_id}/
         ├── page_0.html
@@ -56,23 +57,7 @@ class ProcessChandraOutput(PipelineStep):
         self.include_images = include_images
         self.resize_longest_side_pixels = resize_longest_side_pixels
 
-        # Import Chandra utilities
-        try:
-            from chandra.model import parse_markdown
-            from chandra.output import extract_images, parse_chunks
-            from PIL import Image
-
-            self.parse_markdown = parse_markdown
-            self.parse_chunks = parse_chunks
-            self.extract_images = extract_images
-            self.Image = Image
-        except ImportError:
-            raise ImportError(
-                "chandra-ocr package required for ProcessChandraOutput. "
-                "Install with: pip install chandra-ocr"
-            )
-
-    def _render_page_to_pil(self, page: fitz.Page) -> "Image.Image":
+    def _render_page_to_pil(self, page: fitz.Page) -> Image.Image:
         """Render PDF page to PIL Image at specified resolution."""
         # Calculate scale to achieve target resolution
         page_rect = page.rect
@@ -85,9 +70,7 @@ class ProcessChandraOutput(PipelineStep):
 
         # Convert to PIL Image
         img_data = pix.tobytes("png")
-        from io import BytesIO
-
-        img = self.Image.open(BytesIO(img_data))
+        img = Image.open(BytesIO(img_data))
         return img
 
     def run(self, data: Iterable[Document], rank: int = 0, world_size: int = 1):
@@ -142,8 +125,8 @@ class ProcessChandraOutput(PipelineStep):
 
                     # Parse chunks and extract images
                     try:
-                        chunks = self.parse_chunks(html, page_image)
-                        images = self.extract_images(html, chunks, page_image)
+                        chunks = parse_chunks(html, page_image)
+                        images = extract_images(html, chunks, page_image)
 
                         # Save extracted images
                         if images:
@@ -161,7 +144,7 @@ class ProcessChandraOutput(PipelineStep):
 
                 # Convert HTML to markdown
                 try:
-                    markdown = self.parse_markdown(html, include_images=self.include_images)
+                    markdown = parse_markdown(html, include_images=self.include_images)
                     markdown_pages.append(markdown)
                 except Exception as e:
                     markdown_pages.append(f"[Chandra parsing error: {e}]")
