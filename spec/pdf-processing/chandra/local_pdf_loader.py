@@ -1,8 +1,9 @@
 """PDF loading utilities from local filesystem for spec examples."""
 
+import json
 from pathlib import Path
 
-import fitz  # PyMuPDF
+import fitz
 
 from datatrove.data import Document, Media, MediaType
 from datatrove.utils.logging import logger
@@ -25,6 +26,14 @@ def load_pdf_documents(data_dir: str):
         data_path.mkdir(parents=True, exist_ok=True)
         logger.info(f"Created {data_dir}. Please add PDF files and run again.")
         return []
+
+    # Load URL mapping if available
+    url_mapping = {}
+    mapping_path = data_path / "url_mapping.json"
+    if mapping_path.exists():
+        with open(mapping_path, encoding="utf-8") as f:
+            url_mapping = json.load(f)
+        logger.info(f"Loaded URL mapping for {len(url_mapping)} files")
 
     # Find all PDF files
     pdf_files = list(data_path.glob("*.pdf"))
@@ -51,6 +60,9 @@ def load_pdf_documents(data_dir: str):
 
         file_size = pdf_path.stat().st_size
 
+        # Get source URL from mapping if available
+        source_url = url_mapping.get(pdf_path.name)
+
         doc = Document(
             text="",  # Empty until extracted
             id=pdf_path.stem,
@@ -68,7 +80,10 @@ def load_pdf_documents(data_dir: str):
                     },
                 )
             ],
-            metadata={"source": str(pdf_path)}
+            metadata={
+                "source": str(pdf_path),
+                "source_url": source_url,
+            }
         )
         documents.append(doc)
         logger.info(f"Loaded: {pdf_path.name} ({num_pages} pages, {file_size:,} bytes)")
