@@ -37,10 +37,9 @@ class ProcessChandraOutput(PipelineStep):
     Output structure:
         {output_dir}/{doc_id}/
         ├── page_0.html
-        ├── page_0_images/
-        │   ├── {hash}_0_img.webp
-        │   └── ...
         ├── page_1.html
+        ├── {hash}_8_img.webp
+        ├── {hash}_10_img.webp
         └── ...
     """
 
@@ -136,13 +135,10 @@ class ProcessChandraOutput(PipelineStep):
                     chunks = parse_chunks(raw_html, page_image)
                     images = extract_images(raw_html, chunks, page_image)
 
-                    # Save extracted images
+                    # Save extracted images to flat directory (same as HTML files)
                     if images:
-                        images_dir = doc_dir / f"page_{page_num}_images"
-                        images_dir.mkdir(exist_ok=True)
-
                         for img_name, pil_image in images.items():
-                            img_path = images_dir / img_name
+                            img_path = doc_dir / img_name
                             pil_image.save(img_path)
                             self.stat_update("images_saved")
 
