@@ -6,7 +6,7 @@ from typing import Iterable
 
 import fitz
 from chandra.model import parse_markdown
-from chandra.output import extract_images, parse_chunks
+from chandra.output import extract_images, parse_chunks, parse_html
 from PIL import Image
 
 from datatrove.data import Document
@@ -110,41 +110,49 @@ class ProcessChandraOutput(PipelineStep):
                     page_num += 1
                     continue
 
-                # Get raw HTML
-                html = result.text
+                # Get raw HTML from model
+                raw_html = result.text
 
-                # Save raw HTML
+                # Render page as PIL Image for image extraction and HTML processing
+                if page_num >= len(pdf_doc):
+                    logger.error(f"Page {page_num} out of range for {document.id} (PDF has {len(pdf_doc)} pages)")
+                    self.stat_update("page_out_of_range")
+                    page_num += 1
+                    continue
+
+                page = pdf_doc.load_page(page_num)
+                page_image = self._render_page_to_pil(page)
+
+                # Process HTML to add image src attributes
+                processed_html = parse_html(raw_html, include_images=True)
+
+                # Save processed HTML (with src attributes)
                 html_path = doc_dir / f"page_{page_num}.html"
-                html_path.write_text(html, encoding="utf-8")
+                html_path.write_text(processed_html, encoding="utf-8")
                 self.stat_update("html_pages_saved")
 
-                # Render page as PIL Image and extract images
-                if page_num < len(pdf_doc):
-                    page = pdf_doc.load_page(page_num)
-                    page_image = self._render_page_to_pil(page)
-
-                    # Parse chunks and extract images
-                    try:
-                        chunks = parse_chunks(html, page_image)
-                        images = extract_images(html, chunks, page_image)
-
-                        # Save extracted images
-                        if images:
-                            images_dir = doc_dir / f"page_{page_num}_images"
-                            images_dir.mkdir(exist_ok=True)
-
-                            for img_name, pil_image in images.items():
-                                img_path = images_dir / img_name
-                                pil_image.save(img_path)
-                                self.stat_update("images_saved")
-
-                    except Exception as e:
-                        logger.warning(f"Error extracting images for {document.id} page {page_num}: {e}")
-                        self.stat_update("image_extraction_errors")
-
-                # Convert HTML to markdown
+                # Parse chunks and extract images
                 try:
-                    markdown = parse_markdown(html, include_images=self.include_images)
+                    chunks = parse_chunks(raw_html, page_image)
+                    images = extract_images(raw_html, chunks, page_image)
+
+                    # Save extracted images
+                    if images:
+                        images_dir = doc_dir / f"page_{page_num}_images"
+                        images_dir.mkdir(exist_ok=True)
+
+                        for img_name, pil_image in images.items():
+                            img_path = images_dir / img_name
+                            pil_image.save(img_path)
+                            self.stat_update("images_saved")
+
+                except Exception as e:
+                    logger.warning(f"Error extracting images for {document.id} page {page_num}: {e}")
+                    self.stat_update("image_extraction_errors")
+
+                # Convert HTML to markdown (parse_markdown calls parse_html internally)
+                try:
+                    markdown = parse_markdown(raw_html, include_images=self.include_images)
                     markdown_pages.append(markdown)
                 except Exception as e:
                     markdown_pages.append(f"[Chandra parsing error: {e}]")
