@@ -36,6 +36,7 @@ class ProcessChandraOutput(PipelineStep):
 
     Output structure:
         {output_dir}/{doc_id}/
+        ├── {doc_id}.md           # Concatenated markdown from all pages
         ├── page_0.html
         ├── page_1.html
         ├── {hash}_8_img.webp
@@ -160,6 +161,11 @@ class ProcessChandraOutput(PipelineStep):
 
             # Set document text to concatenated markdown
             document.text = "\n\n".join(markdown_pages)
+
+            # Save concatenated markdown to file
+            markdown_path = doc_dir / f"{document.id}.md"
+            markdown_path.write_text(document.text, encoding="utf-8")
+            self.stat_update("markdown_files_saved")
 
             # Optionally clean up inference_results metadata
             if self.remove_inference_results and "inference_results" in document.metadata:
