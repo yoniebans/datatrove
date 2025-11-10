@@ -7,6 +7,7 @@ Usage:
 """
 import argparse
 import hashlib
+import json
 import logging
 import re
 import sys
@@ -89,6 +90,32 @@ def web_to_pdf(url, output_path, browser_context, timeout=30):
         # Wait a bit for JavaScript to render content (especially for Notion, SPA sites)
         page.wait_for_timeout(5000)
 
+        # Dismiss common cookie/overlay popups
+        overlay_selectors = [
+            'button[aria-label*="cookie" i]',
+            'button[aria-label*="consent" i]',
+            'button[aria-label*="accept" i]',
+            'button:has-text("Accept")',
+            'button:has-text("Accept all")',
+            'button:has-text("I agree")',
+            'button:has-text("Agree")',
+            'a:has-text("Accept")',
+            '.cookie-banner button',
+            '#cookie-consent button',
+            '[class*="cookie"] button',
+            '[class*="consent"] button',
+            '[id*="cookie"] button',
+        ]
+
+        for selector in overlay_selectors:
+            try:
+                page.click(selector, timeout=1000)
+                logger.info(f"Dismissed overlay using selector: {selector}")
+                page.wait_for_timeout(1000)
+                break
+            except Exception:
+                continue
+
         page.pdf(
             path=str(output_path),
             format='A4',
@@ -121,6 +148,7 @@ def main():
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
     stats = {'success': 0, 'failed': 0, 'skipped': 0}
+    url_mapping = {}
 
     with sync_playwright() as p:
         browser = p.chromium.launch()
@@ -129,9 +157,11 @@ def main():
         for url in tqdm(urls, desc="Processing"):
             category, download_url = get_download_url(url)
             output_path = args.output_dir / sanitize_filename(url)
+            filename = output_path.name
 
             if not args.force and output_path.exists():
                 stats['skipped'] += 1
+                url_mapping[filename] = url
                 continue
 
             if category in ('pdf', 'arxiv'):
@@ -141,6 +171,7 @@ def main():
 
             if success:
                 stats['success'] += 1
+                url_mapping[filename] = url
             else:
                 stats['failed'] += 1
                 if output_path.exists():
@@ -148,6 +179,12 @@ def main():
 
         context.close()
         browser.close()
+
+    # Save URL mapping
+    mapping_path = args.output_dir / 'url_mapping.json'
+    with open(mapping_path, 'w', encoding='utf-8') as f:
+        json.dump(url_mapping, f, indent=2, ensure_ascii=False)
+    logger.info(f"Saved URL mapping to {mapping_path}")
 
     logger.info(f"Complete - Success: {stats['success']}, Failed: {stats['failed']}, Skipped: {stats['skipped']}")
 

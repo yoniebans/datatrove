@@ -1,4 +1,4 @@
-"""Post-processing steps for InferenceRunner results."""
+"""Base post-processing steps for InferenceRunner results."""
 
 from typing import Iterable
 
