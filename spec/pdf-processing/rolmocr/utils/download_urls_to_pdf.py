@@ -90,6 +90,32 @@ def web_to_pdf(url, output_path, browser_context, timeout=30):
         # Wait a bit for JavaScript to render content (especially for Notion, SPA sites)
         page.wait_for_timeout(5000)
 
+        # Dismiss common cookie/overlay popups
+        overlay_selectors = [
+            'button[aria-label*="cookie" i]',
+            'button[aria-label*="consent" i]',
+            'button[aria-label*="accept" i]',
+            'button:has-text("Accept")',
+            'button:has-text("Accept all")',
+            'button:has-text("I agree")',
+            'button:has-text("Agree")',
+            'a:has-text("Accept")',
+            '.cookie-banner button',
+            '#cookie-consent button',
+            '[class*="cookie"] button',
+            '[class*="consent"] button',
+            '[id*="cookie"] button',
+        ]
+
+        for selector in overlay_selectors:
+            try:
+                page.click(selector, timeout=1000)
+                logger.info(f"Dismissed overlay using selector: {selector}")
+                page.wait_for_timeout(1000)
+                break
+            except Exception:
+                continue
+
         page.pdf(
             path=str(output_path),
             format='A4',
